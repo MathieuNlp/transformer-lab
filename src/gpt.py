@@ -28,20 +28,28 @@ class CausalSelfAttention(nn.Module):
 
         return attn
 
-
-
-class Dropout(nn.Module):
-    pass
-
-
 class MutliHeadSelfAttention(nn.Module):
     pass
 
-class LayerNorm(nn.Module):
-    pass
 
 class FeedForward(nn.Module):
-    pass
+    def __init__(self, d_model: int, d_ff: int, dropout_rate: float):
+        super().__init__()
+        self.d_model = d_model
+        self.d_ff = d_ff
+        self.dropout_rate = dropout_rate
+    
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        ff = nn.Sequential(
+            nn.Linear(self.d_model, self.d_ff),
+            nn.Dropout(self.dropout_rate),
+            nn.ReLU(),
+            nn.Linear(self.d_ff, self.d_model),
+            nn.Dropout(self.dropout_rate)
+        )
+
+        return ff(x)
+        
 
 
 class SubBlock(nn.Module):
