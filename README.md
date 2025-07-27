@@ -5,8 +5,8 @@
 - [x] Feed forward layer with dropout and ReLU
 - [ ] Multi head self attention
 - [ ] Subblock of the transformer
-- - [ ] Add residual layers
-- - [ ] Add pre layer norm
+    - [ ] Add residual layers
+    - [ ] Add pre layer norm
 - [ ] Add final layer norm before softmax
 - [ ] Final softmax layer
 
@@ -22,20 +22,20 @@
 - [ ] Optimizer
 - [ ] Loss function
 - [ ] Training loop
-- - [ ] Mini batching
-- - [ ] SGD
-- - [ ] torch compile
+    - [ ] Mini batching
+    - [ ] SGD
+    - [ ] torch compile
 - [ ] Checkpointing
 - [ ] Plots
+[ ] Tensorboard pytorch
 - [ ] Distributed training [!url](https://huggingface.co/spaces/nanotron/ultrascale-playbook)
 
 ## Evals
 - [ ] Metrics
--- [ ] Token / second
--- [ ] Perplexity
-- - [ ] Accuracy
-- - [ ] Execution time
-- - [ ] Tensorboard pytorch
+    - [ ] Token / second
+    - [ ] Perplexity
+    - [ ] Accuracy
+    - [ ] Execution time
 
 ## Sampling
 - [ ] Sampling loop with text answer
