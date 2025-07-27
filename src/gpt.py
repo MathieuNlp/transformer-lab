@@ -7,24 +7,23 @@ class PositionalEncoding(nn.Embedding):
     pass
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, seq_len: int, d: int):
+    def __init__(self, d: int):
         super().__init__()
-        self.seq_len = seq_len
         self.d = d
 
-        self.wq = nn.Linear(seq_len, d)
-        self.wk = nn.Linear(seq_len, d)
-        self.wv = nn.Linear(seq_len, d)
+        self.wq = nn.Linear(self.d, self.d, bias=False)
+        self.wk = nn.Linear(self.d, self.d, bias=False)
+        self.wv = nn.Linear(self.d, self.d, bias=False)
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         q = self.wq(x)
         k = self.wk(x)
         v = self.wv(x)
 
         attn_weight = q @ k.transpose(-2, -1)
         scaled_attn_weight = attn_weight / np.sqrt(self.d)
-        scaled_attn_weight = F.softmax(scaled_attn_weight)
-        attn = scaled_attn_weight @ v.transpose(-2, -1)
+        scaled_attn_weight = F.softmax(scaled_attn_weight, dim=-2)
+        attn = scaled_attn_weight @ v
 
         return attn
 
@@ -37,7 +36,7 @@ class Dropout(nn.Module):
 class MutliHeadSelfAttention(nn.Module):
     pass
 
-class LayerNorm(nn.module):
+class LayerNorm(nn.Module):
     pass
 
 class FeedForward(nn.Module):
