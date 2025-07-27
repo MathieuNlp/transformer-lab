@@ -31,8 +31,8 @@
 
 ## Evals
 - [ ] Metrics
-- - [ ] Token / second
-- - [ ] Perplexity
+-- [ ] Token / second
+-- [ ] Perplexity
 - - [ ] Accuracy
 - - [ ] Execution time
 - - [ ] Tensorboard pytorch
