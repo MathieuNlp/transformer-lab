@@ -22,7 +22,8 @@ class CausalSelfAttention(nn.Module):
 
         attn_weight = q @ k.transpose(-2, -1)
         scaled_attn_weight = attn_weight / np.sqrt(self.d)
-        scaled_attn_weight = F.softmax(scaled_attn_weight, dim=-2)
+        causal_scaled_attn_weight = torch.triu(scaled_attn_weight).transpose(-2, -1)
+        scaled_attn_weight = F.softmax(causal_scaled_attn_weight, dim=-2)
         attn = torch.triu(scaled_attn_weight).transpose(-2, -1) @ v
 
         return attn
