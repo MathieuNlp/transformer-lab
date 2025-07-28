@@ -7,13 +7,13 @@ class PositionalEncoding(nn.Embedding):
     pass
 
 class CausalSelfAttention(nn.Module):
-    def __init__(self, d: int):
+    def __init__(self, d_dim: int):
         super().__init__()
-        self.d = d
+        self.d_dim = d_dim
 
-        self.wq = nn.Linear(self.d, self.d, bias=False)
-        self.wk = nn.Linear(self.d, self.d, bias=False)
-        self.wv = nn.Linear(self.d, self.d, bias=False)
+        self.wq = nn.Linear(self.d_dim, self.d_dim, bias=True)
+        self.wk = nn.Linear(self.d_dim, self.d_dim, bias=True)
+        self.wv = nn.Linear(self.d_dim, self.d_dim, bias=True)
 
     def forward(self, x: torch.tensor) -> torch.tensor:
         q = self.wq(x)
@@ -21,7 +21,7 @@ class CausalSelfAttention(nn.Module):
         v = self.wv(x)
 
         attn_weight = q @ k.transpose(-2, -1)
-        scaled_attn_weight = attn_weight / np.sqrt(self.d)
+        scaled_attn_weight = attn_weight / np.sqrt(self.d_dim)
         causal_scaled_attn_weight = torch.triu(scaled_attn_weight).transpose(-2, -1)
         scaled_attn_weight = F.softmax(causal_scaled_attn_weight, dim=-2)
         attn = torch.triu(scaled_attn_weight).transpose(-2, -1) @ v
@@ -29,14 +29,43 @@ class CausalSelfAttention(nn.Module):
         return attn
 
 class MutliHeadSelfAttention(nn.Module):
-    def __init__(self, n_head: int, d: int):
+    def __init__(self, num_heads: int, seq_len:int, d_dim: int):
         super().__init__()
-        self.n_head = n_head
-        self.d_head = d // n_head
+        self.d_dim = d_dim
+        self.seq_len = seq_len
+        self.num_heads = num_heads
+        self.head_dim = self.d_dim // self.num_heads
+
+        self.wq = nn.Linear(self.d_dim, self.d_dim, bias=True)
+        self.wk = nn.Linear(self.d_dim, self.d_dim, bias=True)
+        self.wv = nn.Linear(self.d_dim, self.d_dim, bias=True)
+        self.wo = nn.Linear(self.d_dim, self.d_dim, bias=True)
 
     def forward(self, x):
-        pass
+        q = self.wq(x)
+        k = self.wk(x)
+        v = self.wv(x)
 
+        batch_size = q.shape[0]
+
+
+        q = q.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        k = k.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+        v = v.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
+
+
+        attn_weight = q @ k.transpose(-2, -1)
+        scaled_attn_weight = attn_weight / np.sqrt(self.d_dim)
+        causal_scaled_attn_weight = torch.triu(scaled_attn_weight).transpose(-2, -1)
+        scaled_attn_weight = F.softmax(causal_scaled_attn_weight, dim=-2)
+        attn = torch.triu(scaled_attn_weight).transpose(-2, -1) @ v
+
+        attn = attn.permute(0, 2, 1, 3)
+        concat_attn = attn.view(batch_size, self.seq_len, self.num_heads*self.head_dim)
+
+        attn_proj = concat_attn @ self.wo
+
+        return attn_proj
 
 class FeedForward(nn.Module):
     def __init__(self, d_model: int, d_ff: int, dropout_rate: float):
