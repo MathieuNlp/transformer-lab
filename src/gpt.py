@@ -29,7 +29,13 @@ class CausalSelfAttention(nn.Module):
         return attn
 
 class MutliHeadSelfAttention(nn.Module):
-    pass
+    def __init__(self, n_head: int, d: int):
+        super().__init__()
+        self.n_head = n_head
+        self.d_head = d // n_head
+
+    def forward(self, x):
+        pass
 
 
 class FeedForward(nn.Module):
