@@ -61,9 +61,9 @@ class MutliHeadSelfAttention(nn.Module):
         attn = torch.triu(scaled_attn_weight).transpose(-2, -1) @ v
 
         attn = attn.permute(0, 2, 1, 3)
-        concat_attn = attn.view(batch_size, self.seq_len, self.num_heads*self.head_dim)
-
-        attn_proj = concat_attn @ self.wo
+        concat_attn = attn.reshape(batch_size, self.seq_len, self.num_heads*self.head_dim)
+        print(concat_attn.shape)
+        attn_proj = self.wo(concat_attn)
 
         return attn_proj
 
