@@ -2,6 +2,8 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import ModuleDict
+
 
 class PositionalEncoding(nn.Embedding):
     pass
@@ -145,16 +147,29 @@ class DecoderBlock(nn.Module):
     def forward(self, x):
         return self.block(x)
 
+
 class GPT2(nn.Module):
-    def __init__(self, num_block: int, num_head: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+    def __init__(self, num_block: int, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
         super().__init__()
-        self.decoder = nn.ModuleList([])
-        for i in range (num_block):
-            block = nn.Sequential(
-                AttentionBlock(),
-                FeedForwardBlock(),
-                LayerNorm()
-            )
-            self.decoder.append(block)
+        self.num_block = num_block
+        self.num_head = num_head
+        self.seq_len = seq_len
+        self.d_dim = d_dim
+        self.d_ff = d_ff
+        self.dropout_rate = dropout_rate
+        self.eps = eps
+
+        self.model = nn.ModuleList()
+
+        for i in range(self.num_block):
+            decoder_block = DecoderBlock(self.num_head, self.seq_len, self.d_dim, self.d_ff, self.dropout_rate, self.eps)
+            block_dict = nn.ModuleDict([
+                [f'block_{i}', decoder_block]
+            ])
+
+            self.model.add_module(block_dict)
+
+    def forward(self, x):
+        pass
 
             
