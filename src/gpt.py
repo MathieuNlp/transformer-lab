@@ -172,4 +172,13 @@ class GPT2(nn.Module):
     def forward(self, x):
         pass
 
-            
+if __name__ == "__main__":
+    model = GPT2(num_block=12,
+                 num_head=8,
+                 seq_len=100,
+                 d_dim=512,
+                 d_ff=2048,
+                 dropout_rate=0.8,
+                 eps=1e-05
+                 )
+    print(model)
