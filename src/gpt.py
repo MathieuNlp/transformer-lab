@@ -62,24 +62,23 @@ class MutliHeadSelfAttention(nn.Module):
 
         attn = attn.permute(0, 2, 1, 3)
         concat_attn = attn.reshape(batch_size, self.seq_len, self.num_heads*self.head_dim)
-        print(concat_attn.shape)
         attn_proj = self.wo(concat_attn)
 
-        return x + attn_proj
+        return attn_proj
 
 class FeedForward(nn.Module):
-    def __init__(self, d_model: int, d_ff: int, dropout_rate: float):
+    def __init__(self, d_dim: int, d_ff: int, dropout_rate: float):
         super().__init__()
-        self.d_model = d_model
+        self.d_dim = d_dim
         self.d_ff = d_ff
         self.dropout_rate = dropout_rate
     
     def forward(self, x: torch.tensor) -> torch.tensor:
         ff = nn.Sequential(
-            nn.Linear(self.d_model, self.d_ff),
+            nn.Linear(self.d_dim, self.d_ff),
             nn.Dropout(self.dropout_rate),
             nn.ReLU(),
-            nn.Linear(self.d_ff, self.d_model),
+            nn.Linear(self.d_ff, self.d_dim),
             nn.Dropout(self.dropout_rate)
         )
 
@@ -93,22 +92,59 @@ class LayerNorm(nn.Module):
     def forward(self, x: torch.tensor) -> torch.tensor:
         return self.ln(x)
 
-class AttentionBlock():
-    pass
+class MultiHeadAttentionBlock():
+    def __init__(self, num_head: int, seq_len: int, d_dim: int, eps: float):
+        super().__init__()
+        self.num_head = num_head
+        self.seq_len = seq_len
+        self.d_dim = d_dim
+        self.eps = eps
+
+        self.mha = MutliHeadSelfAttention(self.num_head, self.seq_len, self.d_dim)
+        self.layer_norm = LayerNorm(self.eps)
+
+        self.block = nn.Sequential(
+            self.layer_norm,
+            self.mha
+        )
+
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        return x + self.block(x)
 
 
 class FeedForwardBlock():
-    pass
+    def __init__(self, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+        super().__init__()
+        self.d_dim = d_dim
+        self.d_ff = d_ff
+        self.dropout_rate = dropout_rate
+        self.eps = eps
+
+        self.ff = FeedForward(self.d_dim, self.d_ff, self.dropout_rate)
+        self.layer_norm = LayerNorm(self.eps)
+
+        self.block = nn.Sequential(
+            self.layer_norm,
+            self.ff
+        )
+
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        return x + self.block(x)
 
 
-class SubBlock(nn.Module):
-    def __init__(self, num_block: int, num_head: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
-        self.attn_block = 
-        self.ff_block = 
-        self.ln = 
-    
+class DecoderBlock(nn.Module):
+    def __init__(self, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+        self.mha_block = MultiHeadAttentionBlock(num_head, seq_len, d_dim, eps)
+        self.ff_block = FeedForwardBlock(d_dim, d_ff, dropout_rate)
+
+        self.block = nn.Sequential(
+            self.mha_block,
+            self.ff_block
+        )
+
     def forward(self, x):
-        return nn.ModuleList([self.attn_block, self.ff_block, self.ln])
+        return self.block(x)
+
 class GPT2(nn.Module):
     def __init__(self, num_block: int, num_head: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
         super().__init__()

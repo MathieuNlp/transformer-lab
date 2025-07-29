@@ -3,7 +3,7 @@
 ## Architecture
 - [x] Causal Self attention layer
 - [x] Feed forward layer with dropout and ReLU
-- [ ] Multi head self attention
+- [x] Multi head self attention
 - [ ] Subblock of the transformer
     - [ ] Add residual layers
     - [ ] Add pre layer norm
