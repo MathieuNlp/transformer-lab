@@ -41,7 +41,7 @@ class MutliHeadSelfAttention(nn.Module):
         self.wv = nn.Linear(self.d_dim, self.d_dim, bias=True)
         self.wo = nn.Linear(self.d_dim, self.d_dim, bias=True)
 
-    def forward(self, x):
+    def forward(self, x: torch.tensor) -> torch.tensor:
         q = self.wq(x)
         k = self.wk(x)
         v = self.wv(x)
@@ -65,7 +65,7 @@ class MutliHeadSelfAttention(nn.Module):
         print(concat_attn.shape)
         attn_proj = self.wo(concat_attn)
 
-        return attn_proj
+        return x + attn_proj
 
 class FeedForward(nn.Module):
     def __init__(self, d_model: int, d_ff: int, dropout_rate: float):
@@ -85,11 +85,40 @@ class FeedForward(nn.Module):
 
         return ff(x)
         
+class LayerNorm(nn.Module):
+    def __init__(self, eps: float):
+        self.eps = eps
+        self.ln = nn.LayerNorm(self.eps)
+    
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        return self.ln(x)
+
+class AttentionBlock():
+    pass
+
+
+class FeedForwardBlock():
+    pass
+
 
 class SubBlock(nn.Module):
-    pass
-
+    def __init__(self, num_block: int, num_head: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+        self.attn_block = 
+        self.ff_block = 
+        self.ln = 
+    
+    def forward(self, x):
+        return nn.ModuleList([self.attn_block, self.ff_block, self.ln])
 class GPT2(nn.Module):
-    pass
+    def __init__(self, num_block: int, num_head: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+        super().__init__()
+        self.decoder = nn.ModuleList([])
+        for i in range (num_block):
+            block = nn.Sequential(
+                AttentionBlock(),
+                FeedForwardBlock(),
+                LayerNorm()
+            )
+            self.decoder.append(block)
 
-
+            
