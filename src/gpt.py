@@ -87,14 +87,16 @@ class FeedForward(nn.Module):
         return ff(x)
         
 class LayerNorm(nn.Module):
-    def __init__(self, eps: float):
+    def __init__(self, d_dim: int, eps: float):
+        super().__init__()
+        self.d_dim = d_dim
         self.eps = eps
-        self.ln = nn.LayerNorm(self.eps)
+        self.ln = nn.LayerNorm(normalized_shape=self.d_dim, eps=self.eps)
     
     def forward(self, x: torch.tensor) -> torch.tensor:
         return self.ln(x)
 
-class MultiHeadAttentionBlock():
+class MultiHeadAttentionBlock(nn.Module):
     def __init__(self, num_head: int, seq_len: int, d_dim: int, eps: float):
         super().__init__()
         self.num_head = num_head
@@ -103,7 +105,7 @@ class MultiHeadAttentionBlock():
         self.eps = eps
 
         self.mha = MutliHeadSelfAttention(self.num_head, self.seq_len, self.d_dim)
-        self.layer_norm = LayerNorm(self.eps)
+        self.layer_norm = LayerNorm(self.d_dim, self.eps)
 
         self.block = nn.Sequential(
             self.layer_norm,
@@ -114,7 +116,7 @@ class MultiHeadAttentionBlock():
         return x + self.block(x)
 
 
-class FeedForwardBlock():
+class FeedForwardBlock(nn.Module):
     def __init__(self, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
         super().__init__()
         self.d_dim = d_dim
@@ -123,7 +125,7 @@ class FeedForwardBlock():
         self.eps = eps
 
         self.ff = FeedForward(self.d_dim, self.d_ff, self.dropout_rate)
-        self.layer_norm = LayerNorm(self.eps)
+        self.layer_norm = LayerNorm(self.d_dim, self.eps)
 
         self.block = nn.Sequential(
             self.layer_norm,
@@ -136,8 +138,9 @@ class FeedForwardBlock():
 
 class DecoderBlock(nn.Module):
     def __init__(self, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
+        super().__init__()
         self.mha_block = MultiHeadAttentionBlock(num_head, seq_len, d_dim, eps)
-        self.ff_block = FeedForwardBlock(d_dim, d_ff, dropout_rate)
+        self.ff_block = FeedForwardBlock(d_dim, d_ff, dropout_rate, eps)
 
         self.block = nn.Sequential(
             self.mha_block,
@@ -163,11 +166,7 @@ class GPT2(nn.Module):
 
         for i in range(self.num_block):
             decoder_block = DecoderBlock(self.num_head, self.seq_len, self.d_dim, self.d_ff, self.dropout_rate, self.eps)
-            block_dict = nn.ModuleDict([
-                [f'block_{i}', decoder_block]
-            ])
-
-            self.model.add_module(block_dict)
+            self.model.add_module(f"block_{i}", decoder_block)
 
     def forward(self, x):
         pass

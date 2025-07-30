@@ -10,6 +10,7 @@ attn = torch.rand(3, 100, 100)
 
 csa = MutliHeadSelfAttention(4, 128, 512)
 ff = FeedForward(521, 2048, 0.8)
+ln = nn.LayerNorm(eps=1e-5)
 
-res = csa(x)
+res = ln(x)
 print(res.shape)
