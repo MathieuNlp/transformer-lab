@@ -50,11 +50,9 @@ class MutliHeadSelfAttention(nn.Module):
 
         batch_size = q.shape[0]
 
-
         q = q.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
         k = k.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
         v = v.view(batch_size, self.seq_len, self.num_heads, self.head_dim).permute(0, 2, 1, 3)
-
 
         attn_weight = q @ k.transpose(-2, -1)
         scaled_attn_weight = attn_weight / np.sqrt(self.d_dim)
@@ -74,17 +72,18 @@ class FeedForward(nn.Module):
         self.d_dim = d_dim
         self.d_ff = d_ff
         self.dropout_rate = dropout_rate
-    
-    def forward(self, x: torch.tensor) -> torch.tensor:
-        ff = nn.Sequential(
+
+        self.ff = nn.Sequential(
             nn.Linear(self.d_dim, self.d_ff),
             nn.Dropout(self.dropout_rate),
             nn.ReLU(),
             nn.Linear(self.d_ff, self.d_dim),
-            nn.Dropout(self.dropout_rate)
+            nn.Dropout(self.dropout_rate),
+            nn.ReLU()
         )
-
-        return ff(x)
+    
+    def forward(self, x: torch.tensor) -> torch.tensor:
+        return self.ff(x)
         
 class LayerNorm(nn.Module):
     def __init__(self, d_dim: int, eps: float):
@@ -96,60 +95,28 @@ class LayerNorm(nn.Module):
     def forward(self, x: torch.tensor) -> torch.tensor:
         return self.ln(x)
 
-class MultiHeadAttentionBlock(nn.Module):
-    def __init__(self, num_head: int, seq_len: int, d_dim: int, eps: float):
+class DecoderBlock(nn.Module):
+    def __init__(self, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
         super().__init__()
         self.num_head = num_head
         self.seq_len = seq_len
-        self.d_dim = d_dim
-        self.eps = eps
-
-        self.mha = MutliHeadSelfAttention(self.num_head, self.seq_len, self.d_dim)
-        self.layer_norm = LayerNorm(self.d_dim, self.eps)
-
-        self.block = nn.Sequential(
-            self.layer_norm,
-            self.mha
-        )
-
-    def forward(self, x: torch.tensor) -> torch.tensor:
-        return x + self.block(x)
-
-
-class FeedForwardBlock(nn.Module):
-    def __init__(self, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
-        super().__init__()
         self.d_dim = d_dim
         self.d_ff = d_ff
         self.dropout_rate = dropout_rate
         self.eps = eps
 
-        self.ff = FeedForward(self.d_dim, self.d_ff, self.dropout_rate)
-        self.layer_norm = LayerNorm(self.d_dim, self.eps)
-
-        self.block = nn.Sequential(
-            self.layer_norm,
-            self.ff
-        )
-
-    def forward(self, x: torch.tensor) -> torch.tensor:
-        return x + self.block(x)
-
-
-class DecoderBlock(nn.Module):
-    def __init__(self, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
-        super().__init__()
-        self.mha_block = MultiHeadAttentionBlock(num_head, seq_len, d_dim, eps)
-        self.ff_block = FeedForwardBlock(d_dim, d_ff, dropout_rate, eps)
-
-        self.block = nn.Sequential(
-            self.mha_block,
-            self.ff_block
-        )
+        self.mha = MutliHeadSelfAttention(num_head, seq_len, d_dim)
+        self.ff = FeedForward(d_dim, d_ff, dropout_rate)
+        self.ln_mha = LayerNorm(self.d_dim, self.eps)
+        self.ln_ff = LayerNorm(self.d_dim, self.eps)
 
     def forward(self, x):
-        return self.block(x)
+        x = self.ln_mha(x)
+        x = x + self.mha(x)
+        x = self.ln_ff(x)
+        x = self.ff(x)
 
+        return x
 
 class GPT2(nn.Module):
     def __init__(self, num_block: int, num_head: int, seq_len: int, d_dim: int, d_ff: int, dropout_rate: float, eps: float):
@@ -167,6 +134,8 @@ class GPT2(nn.Module):
         for i in range(self.num_block):
             decoder_block = DecoderBlock(self.num_head, self.seq_len, self.d_dim, self.d_ff, self.dropout_rate, self.eps)
             self.model.add_module(f"block_{i}", decoder_block)
+
+        # weight tying last and embedding
 
     def forward(self, x):
         pass
