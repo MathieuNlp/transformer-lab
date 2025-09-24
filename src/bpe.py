@@ -3,7 +3,7 @@ from functools import lru_cache
 import json
 from multiprocessing import process
 
-class Tokenizer:
+class BpeAlgo:
     def __init__(self):
         # id -> str
         self.vocab = {}
@@ -52,14 +52,14 @@ class Tokenizer:
         for new_id in range(len(self.vocab), vocab_size):
         # 1) Find the pair of token_id with most frequency
             # Output the most frequent pair of token id
-            pair_id = Tokenizer.find_freq_pairs(token_ids)
+            pair_id = BpeAlgo.find_freq_pairs(token_ids)
             if pair_id is None:
                 break
         # 2) Merge the pair of tokens
             self.bpe_merges[pair_id] = new_id
             print(self.bpe_merges)
         # 3) Merge the 2 tokens in the tokenizer text
-            token_ids = Tokenizer.replace_pair(token_ids, pair_id, new_id)
+            token_ids = BpeAlgo.replace_pair(token_ids, pair_id, new_id)
         # 4) Update vocab
         for (p0, p1), new_id in self.bpe_merges.items():
             merged_token = self.vocab[p0] + self.vocab[p1]
@@ -89,7 +89,7 @@ class Tokenizer:
         return replaced
 
 if __name__ == "__main__":
-    tokenizer = Tokenizer()
+    tokenizer = BpeAlgo()
     text = "This chapter is about tokenization and we are absolutely delighted to learn about it has it is a core component of ai today."
     VOCAB_SIZE = 52_000
     tokenizer.train(text, VOCAB_SIZE)
