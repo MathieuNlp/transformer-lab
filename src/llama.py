@@ -25,7 +25,6 @@ class SelfAttention(nn.Module):
         attn_weights = torch.matmul(q, k.view(x.shape[0], self.k_dim, -1))
         scaled_attn_weights = attn_weights / np.sqrt(self.k_dim)
         sm_attn = torch.tril(softmax(scaled_attn_weights, dim=-1))
-        print(sm_attn.is_contiguous())
         attn = torch.matmul(sm_attn.contiguous(), v)
 
         return attn
