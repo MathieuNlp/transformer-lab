@@ -68,6 +68,14 @@ class SwiGLU(nn.Module):
     def forward(self, x):
         pass
 
+class RMSNorm(nn.Module):
+    def __init__(self, embed_dim: int, eps: float):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.eps = eps
+    
+    def forward(self, x):
+        pass
 
 class FeedForward(nn.Module):
     def __init__(self, embed_dim: int, hidden_dim: int, dropout_rate: float):
