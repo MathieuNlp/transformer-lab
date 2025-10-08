@@ -61,6 +61,35 @@ class MultiheadAttention(nn.Module):
 
         return final_attn
 
+class SwiGLU(nn.Module):
+    def __init__(self):
+        pass
+
+    def forward(self, x):
+        pass
+
+
+class FeedForward(nn.Module):
+    def __init__(self, embed_dim: int, hidden_dim: int, dropout_rate: float):
+        super().__init__()
+        self.embed_dim = embed_dim
+        self.hidden_dim = hidden_dim
+        self.dropout_rate = dropout_rate
+
+        self.f = nn.Sequential(
+            nn.Linear(self.embed_dim, self.hidden_dim),
+            SwiGLU(),
+            nn.Dropout(self.dropout_rate),
+            nn.Linear(self.hidden_dim, self.hidden_dim),
+            SwiGLU(),
+            nn.Dropout(self.dropout_rate),
+            nn.Linear(self.hidden_dim, self.embed_dim),
+            SwiGLU()
+            )
+
+    def forward(self, x):
+        return self.f(x)
+
 
 
 
