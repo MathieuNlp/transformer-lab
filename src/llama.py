@@ -4,6 +4,8 @@ import torch.nn as nn
 from torch.nn import Parameter
 from torch.nn.functional import softmax
 import numpy as np
+import math
+
 
 class SelfAttention(nn.Module):
     def __init__(self, embed_dim: int, q_dim=None, k_dim=None, v_dim=None):
@@ -64,6 +66,7 @@ class MultiheadAttention(nn.Module):
 class SwiGLU(nn.Module):
     def __init__(self):
         pass
+    
 
     def forward(self, x):
         pass
@@ -73,10 +76,16 @@ class RMSNorm(nn.Module):
         super().__init__()
         self.embed_dim = embed_dim
         self.eps = eps
+        self.weight = nn.Parameter(torch.ones(self.embed_dim)) # In the paper, trainable parameter and is set to 1 at the beginning
+    
+    def _norm(self, x):
+        return x * (torch.rsqrt(x.pow(2).mean(-1, keepdim=True)) + self.eps)
     
     def forward(self, x):
-        pass
+        output = self._norm(x.float()).type_as(x)
+        return output * self.weight
 
+        
 class FeedForward(nn.Module):
     def __init__(self, embed_dim: int, hidden_dim: int, dropout_rate: float):
         super().__init__()
@@ -103,7 +112,11 @@ class FeedForward(nn.Module):
 
 if __name__ == "__main__":
     x = torch.rand((5, 10, 512))
-    mha = MultiheadAttention(embed_dim=512, num_head=4)
-    res = mha(x)
-    print(res.shape)
+    rmsn = RMSNorm(embed_dim=512, eps=1e-7)
+    res = rmsn(x)
 
+    rms_norm = nn.RMSNorm([10, 512])
+
+    y = rms_norm(x)
+    print(torch.norm(res[0, 1, :]))
+    print(torch.norm(y[0, 1, :]))
